@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>26 in 2026 🍺</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="26 in 2026">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -357,6 +362,44 @@
   .tab-content.active { display: block; }
 
   /* Visit cards */
+  .visits-search-wrap {
+    position: relative;
+    margin-bottom: 0.75rem;
+  }
+
+  .visits-search {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.65rem 1rem 0.65rem 2.25rem;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .visits-search:focus { border-color: var(--gold-dim); }
+  .visits-search::placeholder { color: var(--text-dim); }
+
+  .visits-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    pointer-events: none;
+  }
+
+  .search-count {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-align: right;
+    margin-bottom: 0.5rem;
+  }
+
   .visits-list { display: flex; flex-direction: column; gap: 0.75rem; }
 
   .visit-card {
@@ -949,6 +992,13 @@
 
   <!-- Visits tab -->
   <div id="tab-visits" class="tab-content active">
+    <div class="visits-search-wrap">
+      <span class="visits-search-icon">🔍</span>
+      <input type="text" class="visits-search" id="visits-search"
+             placeholder="Search brewery, location, drink..."
+             oninput="filterVisits()">
+    </div>
+    <div id="search-count" class="search-count" style="display:none"></div>
     <div id="visits-list" class="visits-list">
       <div class="empty-state"><div class="emoji">🍺</div><p>Loading visits...</p></div>
     </div>
@@ -1296,11 +1346,50 @@ function renderScoreboard() {
 // ════════════════════════════════════════════════════════════
 // VISITS TAB
 // ════════════════════════════════════════════════════════════
-function renderVisits() {
-  const container = document.getElementById('visits-list');
+function filterVisits() {
+  const q = (document.getElementById('visits-search').value || '').toLowerCase().trim();
+  const countEl = document.getElementById('search-count');
 
-  if (!allVisits.length) {
-    container.innerHTML = `<div class="empty-state"><div class="emoji">🍺</div><p>No visits yet. Log your first one!</p></div>`;
+  if (!q) {
+    countEl.style.display = 'none';
+    renderVisits(allVisits);
+    return;
+  }
+
+  const filtered = allVisits.filter(visit => {
+    const loc = allLocations.find(l => l.id === visit.brewery_id);
+    const visitAttendees = allAttendees.filter(a => a.visit_id === visit.id);
+
+    const breweryName = (loc?.name || '').toLowerCase();
+    const location = (loc?.location || '').toLowerCase();
+    const otherGuests = (visit.other_guests || '').toLowerCase();
+    const drinks = visitAttendees.map(a => (a.drink_notes || '').toLowerCase()).join(' ');
+    const attendeeNames = visitAttendees.map(a => {
+      const u = USERS.find(u => u.id === a.user_id);
+      return (u?.name || '').toLowerCase();
+    }).join(' ');
+
+    return breweryName.includes(q) ||
+           location.includes(q) ||
+           otherGuests.includes(q) ||
+           drinks.includes(q) ||
+           attendeeNames.includes(q);
+  });
+
+  countEl.style.display = 'block';
+  countEl.textContent = `${filtered.length} of ${allVisits.length} visits`;
+  renderVisits(filtered);
+}
+
+function renderVisits(visitsToRender) {
+  const container = document.getElementById('visits-list');
+  const list = visitsToRender !== undefined ? visitsToRender : allVisits;
+
+  if (!list.length) {
+    const q = (document.getElementById('visits-search')?.value || '').trim();
+    container.innerHTML = q
+      ? `<div class="empty-state"><div class="emoji">🔍</div><p>No visits match "${q}"</p></div>`
+      : `<div class="empty-state"><div class="emoji">🍺</div><p>No visits yet. Log your first one!</p></div>`;
     return;
   }
 
