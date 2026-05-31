@@ -329,6 +329,115 @@
     color: var(--text-dim);
   }
 
+  .score-chip {
+    cursor: pointer;
+  }
+
+  .score-chip:hover {
+    border-color: var(--gold-dim);
+    background: var(--surface3);
+  }
+
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .profile-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gold-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    flex-shrink: 0;
+  }
+
+  .profile-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--cream);
+  }
+
+  .profile-stats {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  .profile-stat {
+    font-size: 0.8rem;
+    color: var(--cream-dim);
+  }
+
+  .profile-stat strong {
+    color: var(--gold-light);
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+  }
+
+  .profile-visit-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .profile-visit-card:hover {
+    border-color: var(--gold-dim);
+  }
+
+  .profile-visit-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .profile-visit-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--cream);
+  }
+
+  .profile-visit-loc {
+    font-size: 0.75rem;
+    color: var(--cream-dim);
+    margin-top: 1px;
+  }
+
+  .profile-visit-date {
+    font-size: 0.72rem;
+    color: var(--cream-dim);
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .profile-visit-drink {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 0.35rem;
+  }
+
+  .profile-section-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin: 1rem 0 0.5rem;
+  }
+
   /* Nav tabs */
   .nav-tabs {
     display: flex;
@@ -1023,9 +1132,40 @@
 
     <div class="form-group">
       <label class="form-label">Brewery</label>
-      <select class="form-input" id="add-brewery-select">
+      <select class="form-input" id="add-brewery-select" onchange="toggleNewBrewery()">
         <option value="">Select a brewery...</option>
       </select>
+    </div>
+
+    <div id="new-brewery-fields" style="display:none">
+      <div style="background:var(--surface2);border:1px solid var(--gold-dim);border-radius:12px;padding:1rem;margin-bottom:1.25rem">
+        <div style="font-size:0.75rem;font-weight:500;color:var(--gold-light);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem">New Brewery Details</div>
+        <div class="form-group" style="margin-bottom:0.75rem">
+          <label class="form-label">Name *</label>
+          <input type="text" class="form-input" id="new-brewery-name" placeholder="e.g. Tangled Roots">
+        </div>
+        <div class="inline-row">
+          <div class="form-group" style="margin-bottom:0.75rem">
+            <label class="form-label">City</label>
+            <input type="text" class="form-input" id="new-brewery-location" placeholder="e.g. Barrington">
+          </div>
+          <div class="form-group" style="margin-bottom:0.75rem">
+            <label class="form-label">State</label>
+            <input type="text" class="form-input" id="new-brewery-state" placeholder="IL" style="max-width:80px">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Region</label>
+          <select class="form-input" id="new-brewery-region">
+            <option value="Illinois">Illinois</option>
+            <option value="Northern Illinois">Northern Illinois</option>
+            <option value="Wisconsin - Southern">Wisconsin - Southern</option>
+            <option value="Wisconsin - Milwaukee">Wisconsin - Milwaukee</option>
+            <option value="Wisconsin - FDL">Wisconsin - FDL</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <div class="inline-row">
@@ -1103,6 +1243,17 @@
     </div>
 
     <button class="btn btn-ghost" onclick="closeModal('modal-suggest')" style="margin-top:0.5rem;">Close</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     USER PROFILE MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-profile">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="profile-content"><!-- populated by JS --></div>
+    <button class="btn btn-ghost" onclick="closeModal('modal-profile')">Close</button>
   </div>
 </div>
 
@@ -1335,7 +1486,7 @@ function computeScores() {
 function renderScoreboard() {
   const sb = document.getElementById('scoreboard');
   sb.innerHTML = USERS.map(u => `
-    <div class="score-chip ${u.id === currentUser.id ? 'me' : ''}">
+    <div class="score-chip ${u.id === currentUser.id ? 'me' : ''}" onclick="showUserProfile('${u.id}')">
       <div class="s-name">${u.name}</div>
       <div class="s-count">${scores[u.id] || 0}</div>
       <div class="s-label">/ 26</div>
@@ -1344,8 +1495,92 @@ function renderScoreboard() {
 }
 
 // ════════════════════════════════════════════════════════════
-// VISITS TAB
+// USER PROFILE
 // ════════════════════════════════════════════════════════════
+function showUserProfile(userId) {
+  const user = USERS.find(u => u.id === userId);
+  if (!user) return;
+
+  // Get all visits this user attended
+  const userAttendees = allAttendees.filter(a => a.user_id === userId);
+  const userVisitIds = userAttendees.map(a => a.visit_id);
+  const userVisits = allVisits.filter(v => userVisitIds.includes(v.id));
+
+  // Sort by date desc, nulls last
+  const sorted = [...userVisits].sort((a, b) => {
+    if (!a.visit_date && !b.visit_date) return 0;
+    if (!a.visit_date) return 1;
+    if (!b.visit_date) return -1;
+    return new Date(b.visit_date) - new Date(a.visit_date);
+  });
+
+  const qualifyingCount = userAttendees.filter(a => a.counts_toward_26).length;
+  const totalVisits = userVisits.length;
+  const soloVisits = userVisits.filter(v => {
+    return allAttendees.filter(a => a.visit_id === v.id).length === 1;
+  }).length;
+
+  // Split into qualifying and non-qualifying
+  const qualifyingVisitIds = new Set(
+    userAttendees.filter(a => a.counts_toward_26).map(a => a.visit_id)
+  );
+
+  const qualifyingVisits = sorted.filter(v => qualifyingVisitIds.has(v.id));
+  const otherVisits = sorted.filter(v => !qualifyingVisitIds.has(v.id));
+
+  function renderProfileVisit(visit) {
+    const loc = allLocations.find(l => l.id === visit.brewery_id);
+    const myAttendee = userAttendees.find(a => a.visit_id === visit.id);
+    const visitAttendees = allAttendees.filter(a => a.visit_id === visit.id);
+    const others = visitAttendees
+      .filter(a => a.user_id !== userId)
+      .map(a => USERS.find(u => u.id === a.user_id)?.name)
+      .filter(Boolean);
+
+    return `
+      <div class="profile-visit-card" onclick="closeModal('modal-profile'); setTimeout(() => showVisitDetail('${visit.id}'), 200)">
+        <div class="profile-visit-top">
+          <div>
+            <div class="profile-visit-name">${loc ? loc.name : 'Unknown'}</div>
+            <div class="profile-visit-loc">${loc ? loc.location + (loc.state ? ', ' + loc.state : '') : ''}
+              ${others.length ? '· with ' + others.join(', ') : '· Solo'}
+            </div>
+          </div>
+          <div class="profile-visit-date">${visit.visit_date ? formatDate(visit.visit_date) : '<span style="color:#c0604a">⚠ No date</span>'}</div>
+        </div>
+        ${myAttendee?.drink_notes ? `<div class="profile-visit-drink">🍺 ${myAttendee.drink_notes}</div>` : ''}
+      </div>
+    `;
+  }
+
+  document.getElementById('profile-content').innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">${user.name[0]}</div>
+      <div>
+        <div class="profile-name">${user.name}</div>
+        <div class="profile-stats">
+          <div class="profile-stat"><strong>${qualifyingCount}</strong> / 26</div>
+          <div class="profile-stat"><strong>${totalVisits}</strong> total visits</div>
+          ${soloVisits ? `<div class="profile-stat"><strong>${soloVisits}</strong> solo</div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    ${qualifyingVisits.length ? `
+      <div class="profile-section-label">✓ Counts toward 26 (${qualifyingVisits.length})</div>
+      ${qualifyingVisits.map(renderProfileVisit).join('')}
+    ` : ''}
+
+    ${otherVisits.length ? `
+      <div class="profile-section-label">Other visits (${otherVisits.length})</div>
+      ${otherVisits.map(renderProfileVisit).join('')}
+    ` : ''}
+  `;
+
+  openModal('modal-profile');
+}
+
+
 function filterVisits() {
   const q = (document.getElementById('visits-search').value || '').toLowerCase().trim();
   const countEl = document.getElementById('search-count');
@@ -1503,7 +1738,17 @@ function populateBrewerySelect() {
   const sel = document.getElementById('add-brewery-select');
   const sorted = [...allLocations].sort((a, b) => a.name.localeCompare(b.name));
   sel.innerHTML = '<option value="">Select a brewery...</option>' +
-    sorted.map(l => `<option value="${l.id}">${l.name}${l.location ? ' — ' + l.location : ''}</option>`).join('');
+    sorted.map(l => `<option value="${l.id}">${l.name}${l.location ? ' — ' + l.location : ''}</option>`).join('') +
+    '<option value="__new__">➕ Add a brewery not listed...</option>';
+}
+
+function toggleNewBrewery() {
+  const sel = document.getElementById('add-brewery-select');
+  const newFields = document.getElementById('new-brewery-fields');
+  newFields.style.display = sel.value === '__new__' ? 'block' : 'none';
+  if (sel.value === '__new__') {
+    document.getElementById('new-brewery-name').focus();
+  }
 }
 
 function showAddVisit() {
@@ -1511,6 +1756,11 @@ function showAddVisit() {
   document.getElementById('add-brewery-select').value = '';
   document.getElementById('add-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('add-other-guests').value = '';
+  document.getElementById('new-brewery-fields').style.display = 'none';
+  document.getElementById('new-brewery-name').value = '';
+  document.getElementById('new-brewery-location').value = '';
+  document.getElementById('new-brewery-state').value = '';
+  document.getElementById('new-brewery-region').value = 'Illinois';
 
   // Render attendee checkboxes — current user pre-checked
   const checksDiv = document.getElementById('add-attendees');
@@ -1557,13 +1807,46 @@ function updateDrinkFields() {
 }
 
 async function submitVisit() {
-  const breweryId = document.getElementById('add-brewery-select').value;
+  let breweryId = document.getElementById('add-brewery-select').value;
   const date = document.getElementById('add-date').value;
   const otherGuests = document.getElementById('add-other-guests').value.trim();
   const attendeeIds = getCheckedUserIds();
 
   if (!breweryId) { showToast('Please select a brewery', 'error'); return; }
   if (!attendeeIds.length) { showToast('Select at least one person', 'error'); return; }
+
+  // Handle new brewery entry
+  if (breweryId === '__new__') {
+    const newName = document.getElementById('new-brewery-name').value.trim();
+    if (!newName) { showToast('Please enter the brewery name', 'error'); return; }
+    const newLocation = document.getElementById('new-brewery-location').value.trim();
+    const newState = document.getElementById('new-brewery-state').value.trim();
+    const newRegion = document.getElementById('new-brewery-region').value;
+
+    const btn = document.getElementById('add-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Adding brewery...';
+
+    try {
+      const locRows = await sbInsert('BreweriesLocations', {
+        name: newName,
+        location: newLocation || null,
+        state: newState || null,
+        region: newRegion,
+        is_candidate: true
+      });
+      const newLoc = Array.isArray(locRows) ? locRows[0] : locRows;
+      breweryId = newLoc.id;
+      // Add to local state so counting logic works immediately
+      allLocations.push(newLoc);
+      populateBrewerySelect();
+    } catch(e) {
+      showToast('Error adding brewery: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Save Visit';
+      return;
+    }
+  }
 
   const btn = document.getElementById('add-submit-btn');
   btn.disabled = true;
