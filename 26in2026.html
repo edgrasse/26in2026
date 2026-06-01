@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>26 in 2026 🍺</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c9922a'/><text x='50' y='68' font-family='Georgia,serif' font-size='54' font-weight='bold' text-anchor='middle' fill='%230f0d0a'>26</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c9922a'/><text x='50' y='68' font-family='Georgia,serif' font-size='54' font-weight='bold' text-anchor='middle' fill='%230f0d0a'>26</text></svg>">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="26 in 2026">
@@ -1917,6 +1917,7 @@ function showVisitDetail(visitId) {
   const loc = allLocations.find(l => l.id === visit.brewery_id);
   const visitAttendees = allAttendees.filter(a => a.visit_id === visitId);
   const myAttendee = visitAttendees.find(a => a.user_id === currentUser.id);
+  const iAttended = !!myAttendee;
   const isSolo = visitAttendees.length === 1;
 
   const attendeesHtml = visitAttendees.map(a => {
@@ -1928,20 +1929,20 @@ function showVisitDetail(visitId) {
           ${u ? u.name : '?'}
           ${a.counts_toward_26 ? '<span class="counts-badge">Counts</span>' : ''}
         </div>
-        ${isMe ? `
+        ${iAttended ? `
           <div class="detail-drink ${!a.drink_notes ? 'empty' : ''}" id="display-drink-${a.id}">
-            ${a.drink_notes || 'No drink noted — tap to edit'}
+            ${a.drink_notes || (isMe ? 'No drink noted — tap to edit' : 'Nothing noted')}
           </div>
           <div class="edit-drink-row" id="edit-drink-row-${a.id}" style="display:none">
             <input type="text" class="form-input" id="edit-drink-input-${a.id}"
-                   value="${a.drink_notes || ''}" placeholder="What did you like?"
+                   value="${a.drink_notes || ''}" placeholder="What did ${u ? u.name : 'they'} like?"
                    style="flex:1;font-size:0.85rem;padding:0.5rem 0.75rem">
             <button class="btn btn-primary" style="width:auto;padding:0.5rem 1rem;font-size:0.8rem"
                     onclick="saveDrinkEdit('${a.id}', '${visitId}')">Save</button>
           </div>
           <button class="btn btn-ghost" style="width:auto;padding:0.3rem 0.75rem;font-size:0.75rem;margin-top:0.35rem"
                   onclick="toggleDrinkEdit('${a.id}')">
-            ✏ Edit my drink
+            ✏ Edit ${isMe ? 'my' : u ? u.name + "'s" : ''} drink
           </button>
         ` : `
           <div class="detail-drink ${!a.drink_notes ? 'empty' : ''}">
@@ -1952,8 +1953,6 @@ function showVisitDetail(visitId) {
     `;
   }).join('');
 
-  const canEditDate = !visit.visit_date;
-
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-brewery">${loc ? loc.name : 'Unknown'}</div>
     <div class="detail-meta">
@@ -1962,24 +1961,50 @@ function showVisitDetail(visitId) {
         ? ' · ' + formatDate(visit.visit_date)
         : ' · <span style="color:#c0604a">⚠ Date missing</span>'}
       ${isSolo ? ' · <span style="color:var(--text-dim)">Solo visit</span>' : ''}
-      ${visit.other_guests ? ' · Also: ' + visit.other_guests : ''}
     </div>
 
-    ${!visit.visit_date ? `
-      <div class="flag-msg">⚠ This visit is missing a date. Add it below.</div>
+    ${iAttended ? `
+      <hr class="divider">
+      <div class="section-label">Edit Visit Details</div>
+
       <div class="form-group">
-        <label class="form-label">Visit Date</label>
+        <label class="form-label">Date</label>
         <div style="display:flex;gap:0.5rem">
-          <input type="date" class="form-input" id="fix-date-${visit.id}" style="flex:1">
+          <input type="date" class="form-input" id="edit-visit-date-${visit.id}"
+                 value="${visit.visit_date || ''}" style="flex:1">
           <button class="btn btn-primary" style="width:auto;padding:0.5rem 1rem;font-size:0.8rem"
-                  onclick="saveFixDate('${visit.id}')">Save</button>
+                  onclick="saveVisitDate('${visit.id}')">Save</button>
+        </div>
+        ${!visit.visit_date ? '<div class="flag-msg" style="margin-top:0.5rem">⚠ Date is missing — please add it.</div>' : ''}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Other Guests</label>
+        <div style="display:flex;gap:0.5rem">
+          <input type="text" class="form-input" id="edit-other-guests-${visit.id}"
+                 value="${visit.other_guests || ''}" placeholder="e.g. Letchus, Grandma T" style="flex:1">
+          <button class="btn btn-primary" style="width:auto;padding:0.5rem 1rem;font-size:0.8rem"
+                  onclick="saveOtherGuests('${visit.id}')">Save</button>
         </div>
       </div>
+
       <hr class="divider">
-    ` : ''}
+    ` : `
+      ${!visit.visit_date ? `
+        <div class="flag-msg">⚠ This visit is missing a date.</div>
+        <hr class="divider">
+      ` : ''}
+    `}
 
     <div class="section-label">Who Was There</div>
     <div class="detail-attendees">${attendeesHtml}</div>
+
+    ${iAttended ? `
+      <hr class="divider">
+      <button class="btn btn-danger" onclick="confirmDeleteVisit('${visit.id}')">
+        🗑 Delete This Visit
+      </button>
+    ` : ''}
   `;
 
   openModal('modal-detail');
@@ -2009,8 +2034,8 @@ async function saveDrinkEdit(attendeeId, visitId) {
   }
 }
 
-async function saveFixDate(visitId) {
-  const input = document.getElementById('fix-date-' + visitId);
+async function saveVisitDate(visitId) {
+  const input = document.getElementById('edit-visit-date-' + visitId);
   const val = input.value;
   if (!val) { showToast('Please pick a date', 'error'); return; }
   try {
@@ -2022,6 +2047,63 @@ async function saveFixDate(visitId) {
     renderVisits();
   } catch(e) {
     showToast('Error saving date', 'error');
+  }
+}
+
+async function saveOtherGuests(visitId) {
+  const input = document.getElementById('edit-other-guests-' + visitId);
+  const val = input.value.trim();
+  try {
+    await sbUpdate('BreweriesVisits', visitId, { other_guests: val || null });
+    const v = allVisits.find(v => v.id === visitId);
+    if (v) v.other_guests = val || null;
+    showToast('Guests saved!', 'success');
+    closeModal('modal-detail');
+    renderVisits();
+  } catch(e) {
+    showToast('Error saving guests', 'error');
+  }
+}
+
+function confirmDeleteVisit(visitId) {
+  const visit = allVisits.find(v => v.id === visitId);
+  const loc = allLocations.find(l => l.id === visit?.brewery_id);
+  const name = loc ? loc.name : 'this visit';
+
+  // Replace detail content with confirmation
+  document.getElementById('detail-content').innerHTML = `
+    <div style="text-align:center;padding:1rem 0">
+      <div style="font-size:2rem;margin-bottom:0.75rem">🗑</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--cream);margin-bottom:0.5rem">
+        Delete ${name}?
+      </div>
+      <div style="font-size:0.85rem;color:var(--cream-dim);margin-bottom:1.5rem;line-height:1.5">
+        This will remove the visit and all drink notes for everyone who attended. This cannot be undone.
+      </div>
+      <button class="btn btn-danger" onclick="deleteVisit('${visitId}')" style="margin-bottom:0.5rem">
+        Yes, Delete Visit
+      </button>
+      <button class="btn btn-ghost" onclick="showVisitDetail('${visitId}')">
+        Cancel
+      </button>
+    </div>
+  `;
+}
+
+async function deleteVisit(visitId) {
+  try {
+    // Attendees have ON DELETE CASCADE so deleting the visit removes them too
+    await sbDelete('BreweriesVisits', visitId);
+    // Remove from local state
+    allVisits = allVisits.filter(v => v.id !== visitId);
+    allAttendees = allAttendees.filter(a => a.visit_id !== visitId);
+    computeScores();
+    renderScoreboard();
+    renderVisits();
+    closeModal('modal-detail');
+    showToast('Visit deleted', 'success');
+  } catch(e) {
+    showToast('Error deleting visit: ' + e.message, 'error');
   }
 }
 
