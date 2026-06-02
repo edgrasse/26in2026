@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>26 in 2026 🍺</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c9922a'/><text x='50' y='68' font-family='Georgia,serif' font-size='54' font-weight='bold' text-anchor='middle' fill='%230f0d0a'>26</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c9922a'/><text x='50' y='68' font-family='Georgia,serif' font-size='54' font-weight='bold' text-anchor='middle' fill='%230f0d0a'>26</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%230f0d0a'/><rect x='18' y='22' width='46' height='58' rx='6' fill='%23c9922a'/><rect x='20' y='24' width='42' height='14' rx='3' fill='%23e8b84b'/><rect x='64' y='34' width='16' height='24' rx='8' fill='none' stroke='%23c9922a' stroke-width='5'/><rect x='24' y='44' width='8' height='30' rx='2' fill='%23e8b84b' opacity='0.5'/><rect x='36' y='44' width='8' height='30' rx='2' fill='%23e8b84b' opacity='0.5'/><rect x='48' y='44' width='8' height='30' rx='2' fill='%23e8b84b' opacity='0.5'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%230f0d0a'/><rect x='18' y='22' width='46' height='58' rx='6' fill='%23c9922a'/><rect x='20' y='24' width='42' height='14' rx='3' fill='%23e8b84b'/><rect x='64' y='34' width='16' height='24' rx='8' fill='none' stroke='%23c9922a' stroke-width='5'/><rect x='24' y='44' width='8' height='30' rx='2' fill='%23e8b84b' opacity='0.5'/><rect x='36' y='44' width='8' height='30' rx='2' fill='%23e8b84b' opacity='0.5'/><rect x='48' y='44' width='8' height='30' rx='2' fill='%23e8b84b' opacity='0.5'/></svg>">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="26 in 2026">
@@ -29,6 +29,19 @@
     --green-light: #6aab7e;
     --red: #8b3a3a;
     --hop: #5a7a2a;
+    /* Couple colors */
+    --ed-color: #e8b84b;
+    --ed-bg: #2a2010;
+    --ed-border: #7a5a1a;
+    --kris-color: #e8b84b;
+    --kris-bg: #2a2010;
+    --kris-border: #7a5a1a;
+    --megan-color: #E8A0B4;
+    --megan-bg: #2a1020;
+    --megan-border: #a04060;
+    --jon-color: #5B9BD5;
+    --jon-bg: #0e1e30;
+    --jon-border: #2a5a8a;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -337,6 +350,27 @@
     border-color: var(--gold-dim);
     background: var(--surface3);
   }
+
+  /* Per-user couple colors */
+  .user-ed   { color: var(--ed-color) !important; border-color: var(--ed-border) !important; background: var(--ed-bg) !important; }
+  .user-kris { color: var(--kris-color) !important; border-color: var(--kris-border) !important; background: var(--kris-bg) !important; }
+  .user-megan { color: var(--megan-color) !important; border-color: var(--megan-border) !important; background: var(--megan-bg) !important; }
+  .user-jon  { color: var(--jon-color) !important; border-color: var(--jon-border) !important; background: var(--jon-bg) !important; }
+
+  .score-chip.user-ed .s-name,
+  .score-chip.user-kris .s-name { color: var(--ed-color); }
+  .score-chip.user-megan .s-name { color: var(--megan-color); }
+  .score-chip.user-jon .s-name { color: var(--jon-color); }
+
+  .score-chip.user-ed .s-count,
+  .score-chip.user-kris .s-count { color: var(--ed-color); }
+  .score-chip.user-megan .s-count { color: var(--megan-color); }
+  .score-chip.user-jon .s-count { color: var(--jon-color); }
+
+  .score-chip.user-ed .s-label,
+  .score-chip.user-kris .s-label,
+  .score-chip.user-megan .s-label,
+  .score-chip.user-jon .s-label { color: var(--text-dim); }
 
   .profile-header {
     display: flex;
@@ -1483,10 +1517,14 @@ function computeScores() {
   });
 }
 
+function getUserClass(user) {
+  return 'user-' + user.name.toLowerCase();
+}
+
 function renderScoreboard() {
   const sb = document.getElementById('scoreboard');
   sb.innerHTML = USERS.map(u => `
-    <div class="score-chip ${u.id === currentUser.id ? 'me' : ''}" onclick="showUserProfile('${u.id}')">
+    <div class="score-chip ${getUserClass(u)}" onclick="showUserProfile('${u.id}')">
       <div class="s-name">${u.name}</div>
       <div class="s-count">${scores[u.id] || 0}</div>
       <div class="s-label">/ 26</div>
@@ -1647,8 +1685,8 @@ function renderVisits(visitsToRender) {
 
     const pillsHtml = visitAttendees.map(a => {
       const u = USERS.find(u => u.id === a.user_id);
-      const isMe = a.user_id === currentUser.id;
-      return `<div class="attendee-pill ${isMe ? 'me' : ''}">
+      const userClass = u ? getUserClass(u) : '';
+      return `<div class="attendee-pill ${userClass}">
         ${u ? u.name : '?'}
         ${a.drink_notes ? `<span class="drink">· ${a.drink_notes}</span>` : ''}
       </div>`;
